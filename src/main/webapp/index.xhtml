@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>Smart Meter UI</title>
+    </h:head>
+    <h:body>
+        <h:form>
+            <p:growl>
+                <p:autoUpdate />
+            </p:growl>
+            
+            
+            <p:tabView>                
+                <p:tab title="New Debtors" >
+                    <!-- LATEST EDITS-->
+                    <p:wizard flowListener="#{userWizard.onFlowProcess}"><!--flowListener=""{userWizard.onFlowProcess}-->
+                    <p:tab id="debtorDetails" title="Debtor Details">
+                        <p:panel header="Personal Details">
+                            <p:messages />
+                            <h:panelGrid columns="2" columnClasses="label, value">
+                                <h:outputText value="ID Number: *" />
+                                <p:inputText value="#{userWizard.debtor.idNumber}" required="true" label="idNumber" maxlength="13"/>
+
+                                <h:outputText value="Name: *" />
+                                <p:inputText value="#{userWizard.debtor.name}" required="true" label="name"/>
+
+                                <h:outputText value="Balance: " />
+                                <p:inputText value="#{userWizard.debtor.balance}" required="true"/>
+
+                            </h:panelGrid>
+                        </p:panel>
+                    </p:tab>
+                    <p:tab id="unitDetails" title="Unit Details">
+                        <p:panel header="Unit Details">
+                            <p:messages />
+                            <h:panelGrid columns="2" columnClasses="label, value">
+                                <h:outputText value="Meter Number: *" />
+                                <!--value="{userWizard.debtor.meterObject.meterNumber}"-->
+                                <p:inputText  required="true" label="meterNumber" maxlength="4"/>
+
+                                <h:outputText value="Address: *" />
+                                <p:inputText  required="true" label="address"/>
+
+                                <h:outputText value="Meter Reading: " />
+                                <p:inputText required="true"/>
+
+                                <h:outputText value="Skip to last: " />
+                                <h:selectBooleanCheckbox value="#{userWizard.skip}"/>
+                            </h:panelGrid>
+                        </p:panel>
+                    </p:tab>
+                    <p:tab id="confirm" title="Confirmation">
+                        <p:panel header="Confirmation">
+                            <h:panelGrid id="confirmation" columns="3" columnClasses="grid,grid,grid">
+                                <h:panelGrid columns="2" columnClasses="label, value">
+                                    <h:outputText value="ID Number: " />
+                                    <h:outputText value="#{userWizard.debtor.idNumber}" styleClass="outputLabel"/><!--#{userWizard.user.firstname}-->
+
+                                    <h:outputText value="Name: " />
+                                    <h:outputText value="#{userWizard.debtor.name}" styleClass="outputLabel"/>
+
+                                    <h:outputText value="Balance: " />
+                                    <h:outputText value="#{userWizard.debtor.balance}" styleClass="outputLabel"/>
+                                    <h:outputText value="Skip to last: " />
+                                    <h:selectBooleanCheckbox value="#{userWizard.skip}"/>
+                                </h:panelGrid>
+
+                                <h:panelGrid columns="2" columnClasses="label, value">
+                                    <h:outputText value="Meter Number: " />
+                                    <!--value="{userWizard.debtor.meterObject.meterNumber}" -->
+                                    <h:outputText styleClass="outputLabel"/>
+
+                                    <h:outputText value="Address: " />
+                                    <h:outputText styleClass="outputLabel"/>
+
+                                    <h:outputText value="Meter Reading: " />
+                                    <h:outputText  styleClass="outputLabel"/>
+                                </h:panelGrid>
+
+                            </h:panelGrid>
+
+                            <p:commandButton value="Submit"  update="growl" /><!--actionListener="#{userWizard.save}"--> <!--process="@this"-->
+                        </p:panel>
+                    </p:tab>
+                </p:wizard>
+                    
+                </p:tab>                
+                <p:tab title="Debtors Information">
+                    <div style="padding-bottom: 16px">
+                        <p:inputText placeholder="Debtor Id" id="idNum"/>
+                        <p:commandButton value="Search" action="#{debtorServiceClient.getDebtor(idNum)}"/>
+                    </div>
+                    
+                    <p:dataTable var="debtorsTable" value="#{debtorServiceClient.debtorList}">
+                        <p:column headerText="Debtor Ids">
+                            <h:outputText value="#{debtorsTable.idNumber}" />
+                        </p:column>
+
+                        <p:column headerText="Names">
+                            <h:outputText value="#{debtorsTable.name}" />
+                        </p:column>
+
+                        <p:column headerText="Balances">
+                            <h:outputText value="#{debtorsTable.balance}" />
+                        </p:column>
+                    </p:dataTable>
+                </p:tab>
+                
+                <p:tab title="Statements">
+                    <h:panelGrid columns="2" cellpadding="10">
+
+                    </h:panelGrid>
+                </p:tab>
+            </p:tabView>
+        </h:form>
+    </h:body>
+</html>
+
