@@ -1,0 +1,5 @@
+za\co\bcx\websmartmeter\SmartMeter\models\Debtor.class
+za\co\bcx\websmartmeter\SmartMeter\models\Billing.class
+za\co\bcx\websmartmeter\SmartMeter\models\Meter.class
+za\co\bcx\websmartmeter\SmartMeter\clients\DebtorServiceClient.class
+za\co\bcx\websmartmeter\SmartMeter\models\SystemDB.class
