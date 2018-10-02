@@ -1,45 +1,30 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package za.co.bcx.websmartmeter.SmartMeter.models;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-
-
 
 /**
  *
  * @author Leolen
  */
 public class Debtor implements Serializable{
-    private String name;
     private String idNumber;
+    private String name;
     private BigDecimal balance;
-    
-    private Billing billingInfo;
-    private Meter meterInfo;
-//    
-//    public Debtor(String id, String name, long balance,
-//            Billing billing, Meter meter){
-//        this.id = id;
-//        this.name = name;
-//        this.balance = balance;
-//        billingInfo = new Billing(billing);
-//        meterInfo = new Meter(meter);
-//    }
-    
-        
+    private Meter meter;
+   
     public Debtor(Debtor debtor){
         idNumber = debtor.idNumber;
         name = debtor.name;
         balance = debtor.balance;
-        billingInfo = new Billing(debtor.getBillingInfo());
-        meterInfo = new Meter(debtor.getMeterInfo());
+        meter = new Meter(debtor.getMeter());
     }
-    public Debtor(){}
+    public Debtor(){
+        idNumber = "";
+        name = "";
+        balance = BigDecimal.valueOf(0);
+        meter = new Meter();
+    }
     
     /**
      * @return the name
@@ -56,14 +41,14 @@ public class Debtor implements Serializable{
     }
 
     /**
-     * @return the id
+     * @return the idNumber
      */
     public String getIdNumber() {
         return idNumber;
     }
 
     /**
-     * @param idNumber the id to set
+     * @param idNumber the idNumber to set
      */
     public void setIdNumber(String idNumber) {
         this.idNumber = idNumber;
@@ -83,48 +68,30 @@ public class Debtor implements Serializable{
         this.balance = balance;
     }
     
-    @Override
-    public String toString(){
-        return String.format("ID Number\t\t:%s\n" +
-               "Name\t\t\t:%s\n" + 
-               "Balance\t\t\t:%f\n" +
-               "%s\n" + 
-               "%s\n", 
-                idNumber,
-                name,
-                balance, 
-                getBillingInfo().toString(),
-                getMeterInfo()); 
+//    @Override
+//    public String toString(){
+//        return String.format("ID Number\t\t:%s\n" +
+//               "Name\t\t\t:%s\n" + 
+//               "Balance\t\t\t:%f\n" +
+//               "%s\n" + 
+//               "%s\n", 
+//                idNumber,
+//                name,
+//                balance); 
+//    }
+
+    /**
+     * @return the meter
+     */
+    public Meter getMeter() {
+        return meter;
     }
 
     /**
-     * @return the billingInfo
+     * @param meter the meter to set
      */
-    public Billing getBillingInfo() {
-        return new Billing(billingInfo);
+    public void setMeter(Meter meter) {
+        this.meter = meter;
     }
-
-    /**
-     * @param billingInfo the billingInfo to set
-     */
-    public void setBillingInfo(Billing billingInfo) {
-        this.billingInfo = new Billing(billingInfo);
-    }
-
-    /**
-     * @return the meterInfo
-     */
-    public Meter getMeterInfo() {
-        return new Meter (meterInfo);
-    }
-
-    /**
-     * @param meterInfo the meterInfo to set
-     */
-    public void setMeterInfo(Meter meterInfo) {
-        this.meterInfo = new Meter(meterInfo);
-    }
-
-    
-    
+ 
 }

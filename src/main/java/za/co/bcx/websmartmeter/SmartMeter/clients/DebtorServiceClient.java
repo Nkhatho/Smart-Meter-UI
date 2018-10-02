@@ -11,12 +11,11 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JsonMappingExceptionMapper;
 import com.fasterxml.jackson.jaxrs.json.JsonParseExceptionMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import javax.annotation.PostConstruct;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
+import javax.faces.context.FacesContext;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -25,7 +24,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import org.primefaces.event.FlowEvent;
+import org.springframework.beans.factory.annotation.Autowired;
 import za.co.bcx.websmartmeter.SmartMeter.models.Debtor;
+import za.co.bcx.websmartmeter.SmartMeter.models.SystemDB;
 
 /**
  *
@@ -36,28 +38,50 @@ import za.co.bcx.websmartmeter.SmartMeter.models.Debtor;
 @ManagedBean
 public class DebtorServiceClient {
 
+    
+    @Autowired SystemDB systemDB;
+    @Autowired private Debtor debtor;
+    private boolean skip;
     private static final int ONE_MINUTE = 60000;
     private final String baseUrl;
     private Client client;
 
+    /**
+     * Constructor 
+     */
     public DebtorServiceClient(){
-        this("http://172.16.220.210:8080");
-        //this("http://localhost:8080");
+
+        this("http://localhost:8080");
+        systemDB = new SystemDB();
+        debtor = new Debtor();
     }
   
+    /**
+     * Overloaded constructor
+     * @param baseUrl URL string
+     */
     public DebtorServiceClient(String baseUrl) {
         this.baseUrl = baseUrl;
     }
+    
+    /**
+     * Gets the web target with path
+     * @param paths The web path
+     * @return The web target instance
+     */
     private WebTarget getWebTarget(String... paths) {
         String url = this.baseUrl;
         for (String path : paths) {
             url = String.format("%s/%s", url, path);
         }
-        System.out.println("URL AT getWebTarget===" + url);
         WebTarget target = getClient().target(url);
         return target;
     }
     
+    /**
+     * Creates an object mapper
+     * @return The object mapper
+     */
     protected static ObjectMapper createObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         AnnotationIntrospector primary = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
@@ -68,6 +92,10 @@ public class DebtorServiceClient {
         return objectMapper;
     }
     
+    /**
+     * Creates a client builder instance
+     * @return The client builder instance
+     */
     protected static ClientBuilder createClientBuilder() {
         ClientBuilder clientBuilder = ClientBuilder.newBuilder();
         clientBuilder.property("jersey.config.disableMoxyJson.client", true);
@@ -80,61 +108,125 @@ public class DebtorServiceClient {
         clientBuilder.register(jacksonJaxbJsonProvider, MessageBodyReader.class, MessageBodyWriter.class);
         return clientBuilder;
     }
-
+    
+    /**
+     * Creates a client instance
+     * @return The client instance
+     */
     private Client getClient() {
         if (client == null) {
             client = createClientBuilder().build();
             client.property("javax.xml.ws.client.connectionTimeout", ONE_MINUTE);
             client.property("javax.xml.ws.client.receiveTimeout", ONE_MINUTE);
         }
-        System.out.println("CLIENT AT getClient()===" + client.toString());
         return client;
     }
 
-    public Debtor addDebtor(Debtor debtor) {
-        WebTarget webTarget = getWebTarget("debtors", "setdebtor");
+    /**
+     * Saves Debtor details to the specified web target
+     * @param debtor The Debtor instance details to be saved
+     * @return Entity response
+     */
+    public Debtor setDebtorDetails(Debtor debtor) {
+        WebTarget webTarget = getWebTarget("debtordetails", "save");
         Response response = webTarget.request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(debtor, MediaType.APPLICATION_JSON_TYPE));
 
         if (response.getStatus() != 201 || response.getStatus() != 200) {//added or
-            System.out.println("RUNTIME EX AT addDebtor() ===" + response.getStatus());
             throw new RuntimeException("Failed to add debtor");
         }
         return (Debtor) response.getEntity();
     }
 
+    /**
+     * Retrieves a list of all debtor instances
+     * @return List of debtors
+     */
     public List<Debtor> getDebtorList() {
     
-        WebTarget webTarget = getWebTarget("debtors");
-        System.out.println("WEBTARGET AT getDebtorList()===" + webTarget.toString());
+        WebTarget webTarget = getWebTarget("debtors", "details");
         Response response = webTarget.request(MediaType.APPLICATION_JSON)
-                .get();//HERE
+                .get();
 
         if(response.getStatus() != 200) {
-            System.out.println("=====HAS ENTITY===" + response.hasEntity());
-            System.out.println("=====THE ENTITY===" + response.getEntity());
-            System.out.println("WEBTARGET AT getDebtorList()2===" + webTarget.toString() + "\n" + response.getStatus());
             throw new RuntimeException("Failed to retrieve debtors");
         }
-        System.out.println("WEBTARGET AT getDebtorList()3===" + webTarget.toString() + "\n" + response.getStatus());
         Debtor[] debtors = response.readEntity(Debtor[].class);
-        return new ArrayList<>(Arrays.asList(debtors));
+        
+        for(Debtor debt: debtors){
+            systemDB.setDebtorDetails(debt);
+        }
+        return systemDB.getDebtorsDetails();
+
     }
-     public Debtor getDebtor(String idNumber) {
+    
+    /**
+     * Retrieves a single instance of the debtor
+     * @param idNumber The ID number of the debtor to be retrieved
+     * @return The debtor instance
+     */
+    public Debtor getDebtor(String idNumber) {
     
         WebTarget webTarget = getWebTarget("debtors", idNumber);
-        System.out.println("WEBTARGET AT getDebtor()===" + webTarget.toString());
         Response response = webTarget.request(MediaType.APPLICATION_JSON)
-                .get();//HERE
+                .get();
 
         if(response.getStatus() != 200) {
-            System.out.println("=====HAS ENTITY===" + response.hasEntity());
-            System.out.println("=====THE ENTITY===" + response.getEntity());
-            System.out.println("WEBTARGET AT getDebtor()2===" + webTarget.toString() + "\n" + response.getStatus());
             throw new RuntimeException("Failed to retrieve debtor");
         }
-        System.out.println("WEBTARGET AT getDebtor()3===" + webTarget.toString() + "\n" + response.getStatus());
-        Debtor debtor = response.readEntity(Debtor.class);
+        return response.readEntity(Debtor.class);
+    }
+     
+    /**
+     * Saves debtor details
+     * @return Confirmation string
+     */
+     public String save(){
+        WebTarget webTarget = getWebTarget("debtordetails", "save");
+        Response response = webTarget.request(MediaType.APPLICATION_JSON)
+                .post(Entity.entity(debtor, MediaType.APPLICATION_JSON_TYPE));
+
+        if (response.getStatus() != 201 || response.getStatus() != 200) {//added or
+            throw new RuntimeException("Failed to add debtor");
+        }
+        FacesMessage msg = new FacesMessage("Debtor Saved", ((Debtor)response.getEntity()).getName() + " saved!!!");
+        FacesContext.getCurrentInstance().addMessage(null, msg);
+        
+        return "index";
+
+     }
+     
+    public boolean isSkip() {
+        return skip;
+    }
+ 
+    public void setSkip(boolean skip) {
+        this.skip = skip;
+    }
+     
+    public String onFlowProcess(FlowEvent event) {
+        if(skip) {
+            skip = false;   //reset in case user goes back
+            return "confirm";
+        }
+        else {
+         
+            return event.getNewStep();
+        }
+    }
+
+    /**
+     * @return the debtor
+     */
+    public Debtor getDebtor() {
         return debtor;
     }
+
+    /**
+     * @param debtor the debtor to set
+     */
+    public void setDebtor(Debtor debtor) {
+        this.debtor = debtor;
+    }
+
 }
